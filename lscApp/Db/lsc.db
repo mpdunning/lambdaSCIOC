@@ -1,0 +1,475 @@
+record(stringin, "$(P):IOC") {
+  field(DESC, "$(DESC)")
+  field(VAL,  "$(IOCNAME)")
+  field(PINI, "1")
+}
+record(bo,"$(P):ONLINE"){
+  field(DESC, "Set controller online")
+  field(DTYP, "stream")
+  field(OUT,  "@$(PROTOFILE) setOnline $(PORT)")
+  field(TPRO, "1")
+}
+record(bo,"$(P):RESET"){
+  field(DESC, "Reset controller to last saved config")
+  field(DTYP, "stream")
+  field(OUT,  "@$(PROTOFILE) resetToSaved $(PORT)")
+}
+record(bo,"$(P):WATCHDOG"){
+  field(DESC, "")
+  field(SDIS, "$(P):STATUS:OC.SEVR")
+  field(DISV, "0")
+  field(OUT,  "$(P):ONLINE PP")
+  field(SCAN, "5 second")
+#  field(TPRO, "1")
+}
+#----- Open/close control ----------------------------------------
+record(bo, "$(P):OC:OPEN"){
+  field(DESC, "Open shutter")
+  field(DTYP, "stream")
+  field(OUT,  "@$(PROTOFILE) open $(PORT)")
+  field(FLNK, "$(P):STATUS:OC.PROC")
+}
+record(bo, "$(P):OC:CLOSE"){
+  field(DESC, "Close shutter")
+  field(DTYP, "stream")
+  field(OUT,  "@$(PROTOFILE) close $(PORT)")
+  field(FLNK, "$(P):STATUS:OC.PROC")
+}
+#----- TTL In control ----------------------------------------
+record(bo,"$(P):TTL:IN:DISABLE"){
+  field(DESC, "TTL in trig disable")
+  field(DTYP, "stream")
+  field(OUT,  "@$(PROTOFILE) setTTLInDisable $(PORT)")
+  field(FLNK, "$(P):STATUS:OC.PROC")
+}
+record(bo,"$(P):TTL:IN:HIGH"){
+  field(DESC, "TTL in high")
+  field(DTYP, "stream")
+  field(OUT,  "@$(PROTOFILE) setTTLInHi $(PORT)")
+  field(FLNK, "$(P):STATUS:OC.PROC")
+}
+record(bo,"$(P):TTL:IN:LOW"){
+  field(DESC, "TTL in low")
+  field(DTYP, "stream")
+  field(OUT,  "@$(PROTOFILE) setTTLInLo $(PORT)")
+  field(FLNK, "$(P):STATUS:OC.PROC")
+}
+#----- TTL Out control ----------------------------------------
+record(bo,"$(P):TTL:OUT:DISABLE"){
+  field(DESC, "TTL out trig disable")
+  field(DTYP, "stream")
+  field(OUT,  "@$(PROTOFILE) setTTLOutDisable $(PORT)")
+  field(FLNK, "$(P):STATUS:OC.PROC")
+}
+record(bo,"$(P):TTL:OUT:HIGH"){
+  field(DESC, "TTL out high")
+  field(DTYP, "stream")
+  field(OUT,  "@$(PROTOFILE) setTTLOutHi $(PORT)")
+  field(FLNK, "$(P):STATUS:OC.PROC")
+}
+record(bo,"$(P):TTL:OUT:LOW"){
+  field(DESC, "TTL out low")
+  field(DTYP, "stream")
+  field(OUT,  "@$(PROTOFILE) setTTLOutLo $(PORT)")
+  field(FLNK, "$(P):STATUS:OC.PROC")
+}
+#----- Mode control ----------------------------------------
+record(bo,"$(P):MODE:FAST"){
+  field(DESC, "Fast mode")
+  field(DTYP, "stream")
+  field(OUT,  "@$(PROTOFILE) setFast $(PORT)")
+  field(FLNK, "$(P):STATUS:OC.PROC")
+}
+record(bo,"$(P):MODE:SOFT"){
+  field(DESC, "Soft mode")
+  field(DTYP, "stream")
+  field(OUT,  "@$(PROTOFILE) setSoft $(PORT)")
+  field(FLNK, "$(P):STATUS:OC.PROC")
+}
+#----- Free-run control ----------------------------------------
+# Note: NCYCLES must be split from a 16-bit integer into two bytes to send to device.
+record(bo,"$(P):FREERUN:START:ENABLE"){
+  field(DESC, "Start free-run")
+  field(DTYP, "stream")
+  field(SDIS, "$(P):FREERUN:START:CALC")
+  field(OUT,  "@$(PROTOFILE) startFreeRun $(PORT)")
+  field(FLNK, "$(P):STATUS:OC.PROC")
+}
+record(longout,"$(P):FREERUN:START"){
+  field(DESC, "Free-run start")
+  field(FLNK, "$(P):FREERUN:START:CALC")
+}
+record(calc,"$(P):FREERUN:START:CALC"){
+  field(DESC, "Free-run value check")
+  field(INPA, "$(P):STATUS:DELAY:MIN")
+  field(INPB, "$(P):STATUS:DELAY:SEC")
+  field(INPC, "$(P):STATUS:DELAY:MSEC")
+  field(INPD, "$(P):STATUS:EXPOSURE:MIN")
+  field(INPE, "$(P):STATUS:EXPOSURE:SEC")
+  field(INPF, "$(P):STATUS:EXPOSURE:MSEC")
+  field(INPG, "$(P):STATUS:FREERUN:NCYCLES")
+  field(CALC, "((A||B||C) && (D||E||F) && G)>0?0:1")
+  field(FLNK, "$(P):FREERUN:START:ENABLE.PROC")
+}
+record(bo,"$(P):FREERUN:STOP"){
+  field(DESC, "Stop free-run")
+  field(DTYP, "stream")
+  field(OUT,  "@$(PROTOFILE) stopFreeRun $(PORT)")
+  field(FLNK, "$(P):STATUS:OC.PROC")
+}
+record(longout,"$(P):FREERUN:NCYCLES"){
+  field(DESC, "Number of free-run repeat cycles")
+  field(DRVL, "1")
+  field(DRVH, "65535")
+  field(LOPR, "1")
+  field(HOPR, "65535")
+  field(VAL,  "1")
+  field(FLNK, "$(P):AS:FREERUN.PROC")
+}
+record(aSub, "$(P):AS:FREERUN"){
+  field(DESC, "ASub record for freerun Ncycles")
+  field(SNAM, "asFreerun")
+  field(INPA, "$(P):FREERUN:NCYCLES") field(FTA, "ULONG") field(NOA, "1")
+  field(FTVA, "USHORT")   field( NOVA, "1")
+  field(FTVB, "USHORT")   field( NOVB, "1")
+  field(FLNK, "$(P):FREERUN:BYTE1.PROC")
+}
+record(calcout,"$(P):FREERUN:BYTE1"){
+  field(DESC, "Free-run Ncycles byte 1")
+  field(INPA, "$(P):AS:FREERUN.VALA")
+  field(CALC, "A")
+  field(FLNK, "$(P):FREERUN:BYTE2.PROC")
+}
+record(calcout,"$(P):FREERUN:BYTE2"){
+  field(DESC, "Free-run Ncycles byte 2")
+  field(INPA, "$(P):AS:FREERUN.VALB")
+  field(CALC, "A")
+  field(FLNK, "$(P):FREERUN.PROC")
+}
+record(calcout,"$(P):FREERUN"){
+  field(DESC, "Free-run Ncycles out to device")
+  field(INPA, "$(P):FREERUN:BYTE1")
+  field(INPB, "$(P):FREERUN:BYTE2")
+  field(CALC, "0")
+  field(DTYP, "stream")
+  field(OUT,  "@$(PROTOFILE) setFreeRunN $(PORT)")
+  field(FLNK, "$(P):STATUS:OC.PROC")
+}
+#----- Motor on/off control ----------------------------------------
+# Note: this functionality seems pretty useless.
+record(bo,"$(P):MOTORS:ON"){
+  field(DESC, "Set all motors on")
+  field(DTYP, "stream")
+  field(OUT,  "@$(PROTOFILE) setMotorsOn $(PORT)")
+  field(FLNK, "$(P):STATUS:OC.PROC")
+}
+record(bo,"$(P):MOTORS:OFF"){
+  field(DESC, "Set all motors off")
+  field(DTYP, "stream")
+  field(OUT,  "@$(PROTOFILE) setMotorsOff $(PORT)")
+  field(FLNK, "$(P):STATUS:OC.PROC")
+}
+#----- Delay control (for timed exposure) ----------------------------------------
+# Note: some of the timer values (e.g. msec digits) must be assembled from nibbles into separate bytes to send to device.
+record(longout,"$(P):DELAY:MIN"){
+  field(DESC, "Delay, minutes")
+  field(DRVL, "0")
+  field(DRVH, "59")
+  field(LOPR, "0")
+  field(HOPR, "59")
+  field(EGU,  "min")
+  field(VAL,  "0")
+  field(FLNK, "$(P):DELAY.PROC")
+}
+record(longout,"$(P):DELAY:SEC"){
+  field(DESC, "Delay, seconds")
+  field(DRVL, "0")
+  field(DRVH, "59")
+  field(LOPR, "0")
+  field(HOPR, "59")
+  field(EGU,  "sec")
+  field(VAL,  "0")
+  field(FLNK, "$(P):DELAY.PROC")
+}
+record(longout,"$(P):DELAY:MSEC"){
+  field(DESC, "Delay, miliseconds")
+  field(DRVL, "1")
+  field(DRVH, "999")
+  field(LOPR, "1")
+  field(HOPR, "999")
+  field(EGU,  "msec")
+  field(VAL,  "0")
+  field(FLNK, "$(P):AS:DELAY.PROC")
+}
+record(aSub, "$(P):AS:DELAY"){
+  field(DESC, "ASub record for delay")
+  field(SNAM, "asDelayExp")
+  field(INPA, "$(P):DELAY:MSEC") field(FTA, "USHORT") field(NOA, "1")
+  field(FTVA, "USHORT")   field( NOVA, "1")
+  field(FTVB, "USHORT")   field( NOVB, "1")
+  field(FLNK, "$(P):DELAY:MSEC:BYTE1.PROC")
+}
+record(calcout,"$(P):DELAY:MSEC:BYTE1"){
+  field(DESC, "")
+  field(INPA, "$(P):AS:DELAY.VALA")
+  field(CALC, "A")
+  field(FLNK, "$(P):DELAY:MSEC:BYTE2.PROC")
+}
+record(calcout,"$(P):DELAY:MSEC:BYTE2"){
+  field(DESC, "")
+  field(INPA, "$(P):AS:DELAY.VALB")
+  field(CALC, "A")
+  field(FLNK, "$(P):DELAY.PROC")
+}
+record(calcout,"$(P):DELAY"){
+  field(DESC, "Delay for timed exposure")
+  field(INPA, "$(P):DELAY:MIN")
+  field(INPB, "$(P):DELAY:SEC")
+  field(INPC, "$(P):DELAY:MSEC:BYTE1")
+  field(INPD, "$(P):DELAY:MSEC:BYTE2")
+  field(CALC, "0")
+  field(DTYP, "stream")
+  field(OUT,  "@$(PROTOFILE) setDelay $(PORT)")
+  field(FLNK, "$(P):STATUS:OC.PROC")
+}
+#----- Exposure control (for timed exposure) ----------------------------------------
+record(longout,"$(P):EXPOSURE:MIN"){
+  field(DESC, "Exposure, minutes")
+  field(DRVL, "0")
+  field(DRVH, "59")
+  field(LOPR, "0")
+  field(HOPR, "59")
+  field(EGU,  "min")
+  field(VAL,  "0")
+  field(FLNK, "$(P):EXPOSURE.PROC")
+}
+record(longout,"$(P):EXPOSURE:SEC"){
+  field(DESC, "Exposure, seconds")
+  field(DRVL, "0")
+  field(DRVH, "59")
+  field(LOPR, "0")
+  field(HOPR, "59")
+  field(EGU,  "sec")
+  field(VAL,  "0")
+  field(FLNK, "$(P):EXPOSURE.PROC")
+}
+record(longout,"$(P):EXPOSURE:MSEC"){
+  field(DESC, "Exposure, miliseconds")
+  field(DRVL, "1")
+  field(DRVH, "999")
+  field(LOPR, "1")
+  field(HOPR, "999")
+  field(EGU,  "msec")
+  field(VAL,  "0")
+  field(FLNK, "$(P):AS:EXPOSURE.PROC")
+}
+record(aSub, "$(P):AS:EXPOSURE"){
+  field(DESC, "ASub record for delay")
+  field(SNAM, "asDelayExp")
+  field(INPA, "$(P):EXPOSURE:MSEC") field(FTA, "USHORT") field(NOA, "1")
+  field(FTVA, "USHORT")   field( NOVA, "1")
+  field(FTVB, "USHORT")   field( NOVB, "1")
+  field(FLNK, "$(P):EXPOSURE:MSEC:BYTE1.PROC")
+}
+record(calcout,"$(P):EXPOSURE:MSEC:BYTE1"){
+  field(DESC, "")
+  field(INPA, "$(P):AS:EXPOSURE.VALA")
+  field(CALC, "A")
+  field(FLNK, "$(P):EXPOSURE:MSEC:BYTE2.PROC")
+}
+record(calcout,"$(P):EXPOSURE:MSEC:BYTE2"){
+  field(DESC, "")
+  field(INPA, "$(P):AS:EXPOSURE.VALB")
+  field(CALC, "A")
+  field(FLNK, "$(P):EXPOSURE.PROC")
+}
+record(calcout,"$(P):EXPOSURE"){
+  field(DESC, "Exposure for timed exposure")
+  field(INPA, "$(P):EXPOSURE:MIN PP")
+  field(INPB, "$(P):EXPOSURE:SEC PP")
+  field(INPC, "$(P):EXPOSURE:MSEC:BYTE1 PP")
+  field(INPD, "$(P):EXPOSURE:MSEC:BYTE2 PP")
+  field(CALC, "0")
+  field(DTYP, "stream")
+  field(OUT,  "@$(PROTOFILE) setExposure $(PORT)")
+  field(FLNK, "$(P):STATUS:OC.PROC")
+}
+#----- Status and other readbacks ---------------------------
+record(waveform,"$(P):CTC0"){
+  field(DESC, "Controller type and config")
+  field(DTYP, "stream")
+  field(FTVL, "CHAR")
+  field(NELM, "50")
+  field(INP,  "@$(PROTOFILE) getCTC0 $(PORT)")
+}
+record(waveform,"$(P):CTC"){
+  field(DESC, "Controller type and config")
+  field(DTYP, "stream")
+  field(FTVL, "CHAR")
+  field(NELM, "50")
+  field(INP,  "@$(PROTOFILE) getCTC $(PORT)")
+}
+#----- The following records receive raw status bytes from the device  ---------------------------
+record(mbbi,"$(P):STATUS:OC"){
+  field(DESC, "Shutter open/closed status")
+  field(DTYP, "stream")
+  field(INP,  "@$(PROTOFILE) getStatus($(P):STATUS) $(PORT)")
+  field(ZRVL, "0")
+  field(ZRST, "Invalid")
+  field(ONVL, "170")
+  field(ONST, "Open")
+  field(TWVL, "172")
+  field(TWST, "Closed")
+  field(SCAN, "1 second")
+}
+record(mbbi,"$(P):STATUS:MODE"){
+  field(DESC, "Shutter mode status")
+  field(DTYP, "Raw Soft Channel")
+  field(ZRVL, "219")
+  field(ZRST, "Not Connected")
+  field(ONVL, "220")
+  field(ONST, "Fast")
+  field(TWVL, "221")
+  field(TWST, "Soft")
+  field(THVL, "222")
+  field(THST, "Neutral Density")
+  field(FRVL, "0")
+  field(FRST, "Invalid")
+}
+record(longin,"$(P):STATUS:LEADIN"){
+  field(DESC, "Shutter status: lead-in byte")
+}
+record(mbbi,"$(P):STATUS:TTLIN"){
+  field(DESC, "Shutter TTL in status")
+  field(DTYP, "Raw Soft Channel")
+  field(ZRVL, "160")
+  field(ZRST, "Disabled")
+  field(ONVL, "161")
+  field(ONST, "Trigger on high")
+  field(TWVL, "162")
+  field(TWST, "Trigger on low")
+  field(THVL, "163")
+  field(THST, "Toggle on rising")
+  field(FRVL, "164")
+  field(FRST, "Toggle on falling")
+  field(FVVL, "0")
+  field(FVST, "Invalid")
+}
+record(mbbi,"$(P):STATUS:TTLOUT"){
+  field(DESC, "Shutter TTL out status")
+  field(DTYP, "Raw Soft Channel")
+  field(ZRVL, "176")
+  field(ZRST, "Disabled")
+  field(ONVL, "177")
+  field(ONST, "High on open")
+  field(TWVL, "178")
+  field(TWST, "Low on open")
+  field(FVVL, "0")
+  field(FVST, "Invalid")
+}
+record(longin,"$(P):STATUS:DELAY:BYTE1"){
+  field(DESC, "Status: delay byte 1")
+}
+record(longin,"$(P):STATUS:DELAY:MIN"){
+  field(DESC, "Status: delay minutes")
+  field(EGU,  "min")
+}
+record(longin,"$(P):STATUS:DELAY:SEC"){
+  field(DESC, "Status: delay seconds")
+  field(EGU,  "sec")
+}
+record(longin,"$(P):STATUS:DELAY:BYTE4"){
+  field(DESC, "Status: delay byte 4")
+}
+record(longin,"$(P):STATUS:DELAY:BYTE5"){
+  field(DESC, "Status: delay byte 5")
+}
+record(longin,"$(P):STATUS:EXPOSURE:BYTE1"){
+  field(DESC, "Status: exposure byte 1")
+}
+record(longin,"$(P):STATUS:EXPOSURE:MIN"){
+  field(DESC, "Status: exposure minutes")
+  field(EGU,  "min")
+}
+record(longin,"$(P):STATUS:EXPOSURE:SEC"){
+  field(DESC, "Status: exposure seconds")
+  field(EGU,  "sec")
+}
+record(longin,"$(P):STATUS:EXPOSURE:BYTE4"){
+  field(DESC, "Status: exposure byte 4")
+}
+record(longin,"$(P):STATUS:EXPOSURE:BYTE5"){
+  field(DESC, "Status: exposure byte 5")
+}
+record(mbbi,"$(P):STATUS:FREERUN"){
+  field(DESC, "Status: free-run status")
+  field(DTYP, "Raw Soft Channel")
+  field(ZRVL, "240")
+  field(ZRST, "Disabled")
+  field(ONVL, "241")
+  field(ONST, "Run on power on")
+  field(TWVL, "242")
+  field(TWST, "Run on trigger pulse")
+  field(THVL, "243")
+  field(THST, "Run now")
+  field(FRVL, "0")
+  field(FRST, "Invalid")
+}
+record(longin,"$(P):STATUS:FREERUN:BYTE2"){
+  field(DESC, "Status: free-run byte 2")
+}
+record(longin,"$(P):STATUS:FREERUN:BYTE3"){
+  field(DESC, "Status: free-run byte 3")
+  field(FLNK, "$(P):AS:STATUS.PROC")
+}
+#----- The following records decode various status bytes  ---------------------------
+record(aSub, "$(P):AS:STATUS"){
+  field(DESC, "ASub record for status")
+  field(SNAM, "asStatus")
+  field(INPA, "$(P):STATUS:DELAY:BYTE1")  field(FTA, "USHORT") field(NOA, "1") 
+  field(INPB, "$(P):STATUS:DELAY:BYTE4")  field(FTB, "USHORT") field(NOB, "1") 
+  field(INPC, "$(P):STATUS:DELAY:BYTE5") field(FTC, "USHORT") field(NOC, "1") 
+  field(INPD, "$(P):STATUS:EXPOSURE:BYTE1") field(FTD, "USHORT") field(NOD, "1") 
+  field(INPE, "$(P):STATUS:EXPOSURE:BYTE4") field(FTE, "USHORT") field(NOE, "1") 
+  field(INPF, "$(P):STATUS:EXPOSURE:BYTE5") field(FTF, "USHORT") field(NOF, "1") 
+  field(INPG, "$(P):STATUS:FREERUN:BYTE2") field(FTG, "USHORT") field(NOG, "1") 
+  field(INPH, "$(P):STATUS:FREERUN:BYTE3") field(FTH, "USHORT") field(NOH, "1") 
+  field(FTVA, "LONG") field( NOVA, "1")
+  field(FTVB, "LONG") field( NOVB, "1")
+  field(FTVC, "LONG") field( NOVC, "1")
+  field(OUTA, "$(P):STATUS:DELAY:MSEC PP")
+  field(OUTB, "$(P):STATUS:EXPOSURE:MSEC PP")
+  field(OUTC, "$(P):STATUS:FREERUN:NCYCLES PP")
+}
+record(longin,"$(P):STATUS:DELAY:MSEC"){
+  field(DESC, "Status: delay miliseconds")
+  field(EGU,  "msec")
+}
+record(longin,"$(P):STATUS:EXPOSURE:MSEC"){
+  field(DESC, "Status: exposure miliseconds")
+  field(EGU,  "msec")
+}
+record(longin,"$(P):STATUS:FREERUN:NCYCLES"){
+  field(DESC, "Status: free-run N repeat cycles")
+}
+#----- Init & read sequences  ---------------------------
+record(seq, "$(P):SEQ:INIT"){
+  field(DESC, "Initialization sequence")
+  field(LNK1, "$(P):CTC0.PROC")
+  field(DLY1, "$(DELAY0)")
+  field(LNK2, "$(P):ONLINE.PROC")
+  field(DLY2, "$(DELAY0)")
+  field(LNK3, "$(P):CTC.PROC")
+  field(DLY3, "$(DELAY0)")
+  field(LNK4, "$(P):MODE:SOFT.PROC")
+  field(DLY4, "$(DELAY0)")
+  field(LNK5, "$(P):TTL:IN:DISABLE.PROC")
+  field(DLY5, "$(DELAY0)")
+  field(LNK6, "$(P):TTL:OUT:HIGH.PROC")
+  field(DLY6, "$(DELAY0)")
+  field(LNK7, "$(P):STATUS:OC.PROC")
+  field(DLY7, "$(DELAY0)")
+  field(PINI, "1")
+}
+
+

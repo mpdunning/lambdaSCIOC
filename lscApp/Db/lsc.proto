@@ -1,0 +1,111 @@
+# Proto file for Lambda SC Shutter Controller
+# See manual for details on commands: /afs/slac/g/testfac/documents/lambdaSC/LBSC_OpMan.pdf
+# Note: controller has a few quirks:
+#   - After IOC start, controller will not echo back initial byte (0x00) on first command. 
+#   - During free-run operation, controller will not respond to commands.
+#  
+
+OutTerminator=0x0D;
+InTerminator=0x0D 0x00 0x0D 0x00 0x0D;
+
+open {
+    out 0xAA;
+    in 0x00 0xAA;
+}
+close {
+    out 0xAC;
+    in 0x00 0xAC;
+}
+
+getStatus {
+    out 0xCC;
+    in 0x00 0xCC "%(\$1:OC.RVAL)0r%(\$1:MODE.RVAL)0r%(\$1:LEADIN.VAL)0r%(\$1:TTLIN.RVAL)0r%(\$1:TTLOUT.RVAL)0r%(\$1:DELAY:BYTE1.VAL)0r%(\$1:DELAY:MIN.VAL)0r%(\$1:DELAY:SEC.VAL)0r%(\$1:DELAY:BYTE4.VAL)0r%(\$1:DELAY:BYTE5.VAL)0r%(\$1:EXPOSURE:BYTE1.VAL)0r%(\$1:EXPOSURE:MIN.VAL)0r%(\$1:EXPOSURE:SEC.VAL)0r%(\$1:EXPOSURE:BYTE4.VAL)0r%(\$1:EXPOSURE:BYTE5.VAL)0r%(\$1:FREERUN.RVAL)0r%(\$1:FREERUN:BYTE2.VAL)0r%(\$1:FREERUN:BYTE3.VAL)0r";
+}
+
+getCTC {
+    out 0xFD;
+    in  0x00 0xFD "%12c";
+}
+getCTC0 {
+    out 0xFD;
+    in 0xFD "%12c";
+}
+
+setOnline {
+    out 0xEE; 
+    in 0x00 0xEE;
+}
+
+resetToSaved {
+    out 0xFB; 
+    in 0x00 0xFB;
+}
+
+setFast {
+    out 0xDC;
+    in 0x00 0xDC;
+}
+setSoft {
+    out 0xDD;
+    in 0x00 0xDD;
+}
+
+setTTLInDisable {
+    out 0xFA 0xA0;
+    in 0x00 0xFA 0xA0;
+}
+setTTLInHi {
+    out 0xFA 0xA1;
+    in 0x00 0xFA 0xA1;
+}
+setTTLInLo {
+    out 0xFA 0xA2;
+    in 0x00 0xFA 0xA2;
+}
+
+setTTLOutDisable {
+    out 0xFA 0xB0;
+    in 0x00 0xFA 0xB0;
+}
+setTTLOutHi {
+    out 0xFA 0xB1;
+    in 0x00 0xFA 0xB1;
+}
+setTTLOutLo {
+    out 0xFA 0xB2;
+    in 0x00 0xFA 0xB2;
+}
+
+startFreeRun {
+    InTerminator=0x0D;
+    out 0xFA 0xF3;
+    in 0x00 0xFA 0xF3;
+}
+stopFreeRun {
+    out 0xBF;
+    in 0x00 0xBF;
+}
+setFreeRunN {
+    out 0xFA 0xF0 "%(A)r%(B)r";
+    in 0x00 0xFA 0xF0 "%(A)r%(B)r";
+}
+
+setMotorsOn {
+    out 0xCE;
+    in 0x00 0xCE;
+}
+setMotorsOff {
+    out 0xCF;
+    in 0x00 0xCF;
+}
+
+setDelay {
+    out 0xFA 0x10 "%(A)r%(B)r%(C)r%(D)r";
+    in 0x00 0xFA 0x10 "%(A)r%(B)r%(C)r%(D)r";
+}
+setExposure {
+    out 0xFA 0x20 "%(A)r%(B)r%(C)r%(D)r";
+    in 0x00 0xFA 0x20 "%(A)r%(B)r%(C)r%(D)r";
+}
+
+
